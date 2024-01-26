@@ -1,0 +1,111 @@
+groups:
+  - name: ankara
+    interval: 30s
+    rules:
+    - alert: Node down
+      expr: last_over_time(up[20m])== 0
+      for: 3m
+      labels:
+        severity: critical
+      annotations:
+        title: Node {{ $labels.host }} is down
+        #description: Failed to scrape {{ $labels.job }} on {{ $labels.host }} for more than 3 minutes. Node seems down.
+    - alert: HostUnusualDiskReadRate
+      expr: sum by (host) (irate(node_disk_read_bytes_total[2m])) / 1024 / 1024 > 50
+      for: 5m
+      labels:
+        severity: warning
+      annotations:
+        title: "Host unusual disk read rate (instance {{ $labels.host }})"
+        #description: "Disk is probably reading too much data (> 50 MB/s)\n  VALUE = {{ $value }}\n  LABELS: {{ $labels }}"
+
+    - alert: HostUnusualDiskWriteRate
+      expr: sum by (host) (irate(node_disk_written_bytes_total[2m])) / 1024 / 1024 > 50
+      for: 5m
+      labels:
+        severity: warning
+      annotations:
+        summary: "Host unusual disk write rate (instance {{ $labels.host }})"
+        #description: "Disk is probably writing too much data (> 50 MB/s)\n  VALUE = {{ $value }}\n  LABELS: {{ $labels }}"
+
+    - alert: HostOutOfDiskSpace
+      expr: (node_filesystem_avail_bytes * 100) / node_filesystem_size_bytes < 10  and node_filesystem_avail_bytes/(1024*1024*1024) < 10 and ON (instance, device, mountpoint) node_filesystem_readonly == 0
+      for: 5m
+      labels:
+        severity: critical
+      annotations:
+        summary: "Host out of disk space (instance {{ $labels.host }})"
+        #description: "Disk is almost full (< 10% left)\n  VALUE = {{ $value }}\n  LABELS: {{ $labels }}"
+
+    - alert: HostDiskWillFillIn4Hours
+      expr: predict_linear(node_filesystem_free_bytes{fstype!~"tmpfs"}[1h], 4 * 3600) < 0
+      for: 30m
+      labels:
+        severity: warning
+      annotations:
+        summary: "Host disk will fill in 4 hours (instance {{ $labels.host }})"
+        #description: "Disk will fill in 4 hours at current write rate\n  VALUE = {{ $value }}\n  LABELS: {{ $labels }}"
+
+    - alert: OutOfMemoryIn4Hours
+      expr: predict_linear(node_memory_MemAvailable_bytes[1h]  , 5 * 3600) < 0
+      for: 1h
+      labels:
+        severity: warning
+      annotations:
+        summary: "Out of Memory in 4 hours (instance {{ $labels.host }})"
+        #description: "Out of Memory in 4 hours at current rate \n  VALUE = {{ $value }}\n  LABELS: {{ $labels }}"
+
+    - alert: BootHostOutOfInodes
+      expr: node_filesystem_files_free{mountpoint ="/"} / node_filesystem_files{mountpoint ="/"} * 100 < 10
+      for: 5m
+      labels:
+        severity: warning
+      annotations:
+        summary: "Host boot disk out of inodes (instance {{ $labels.host }})"
+        #description: "Disk is almost running out of available inodes (< 10% left)\n  VALUE = {{ $value }}\n  LABELS: {{ $labels }}"
+
+    - alert: PersistentHostOutOfInodes
+      expr: node_filesystem_files_free{device ="/dev/sdb"} / node_filesystem_files{device ="/dev/sdb"} * 100 < 10
+      for: 5m
+      labels:
+        severity: warning
+      annotations:
+        summary: "Host persistent disk out of inodes (instance {{ $labels.host }})"
+        #description: "Disk is almost running out of available inodes (< 10% left)\n  VALUE = {{ $value }}\n  LABELS: {{ $labels }}"
+        #
+    - alert: HostUnusualDiskReadLatency
+      expr: rate(node_disk_read_time_seconds_total[1m]) / rate(node_disk_reads_completed_total[1m]) > 100
+      for: 5m
+      labels:
+        severity: warning
+      annotations:
+        summary: "Host unusual disk read latency (instance {{ $labels.host }})"
+        #description: "Disk latency is growing (read operations > 100ms)\n  VALUE = {{ $value }}\n  LABELS: {{ $labels }}"
+
+    - alert: HostUnusualDiskWriteLatency
+      expr: rate(node_disk_write_time_seconds_total[1m]) / rate(node_disk_writes_completed_total[1m]) > 100
+      for: 5m
+      labels:
+        severity: warning
+      annotations:
+        summary: "Host unusual disk write latency (instance {{ $labels.host }})"
+        #description: "Disk latency is growing (write operations > 100ms)\n  VALUE = {{ $value }}\n  LABELS: {{ $labels }}"
+
+    - alert: HostHighCpuLoad
+      expr: 100 - (avg by(host) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 95
+      for: 1h
+      labels:
+        severity: warning
+      annotations:
+        summary: "Host high CPU load (instance {{ $labels.host }})"
+        #description: "CPU load is > 95%\n  VALUE = {{ $value }}\n  LABELS: {{ $labels }}"
+
+
+    - alert: HostMemoryUnderMemoryPressure
+      expr: rate(node_vmstat_pgmajfault[1m]) > 1000
+      for: 5m
+      labels:
+        severity: warning
+      annotations:
+        summary: "Host memory under memory pressure (instance {{ $labels.host }})"
+        #description: "The node is under heavy memory pressure. High rate of major page faults\n  VALUE = {{ $value }}\n  LABELS: {{ $labels }}"

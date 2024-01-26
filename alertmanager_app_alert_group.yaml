@@ -1,0 +1,135 @@
+global:
+  smtp_from: 'alert@example.com'
+  smtp_smarthost: mail.example.com:587
+  smtp_auth_username: 'alert@example.com'
+  smtp_auth_identity: 'alert@example.com'
+  smtp_auth_password: 'JhwhWVWGb74Zjq6U'
+
+route:
+  # fallback receiver
+  receiver: admin
+  routes:
+    # Star Solutions.
+  - match_re:
+      app_type: (linux|windows)
+    # fallback receiver
+    receiver: os-admin
+    routes:
+    # Linux team
+    - match:
+        app_type: linux
+      # fallback receiver
+      receiver: linux-team-admin
+      routes:
+      - match:
+          severity: critical
+        receiver: linux-team-manager
+      - match:
+          severity: warning
+        receiver: linux-team-lead
+
+    # Windows team
+    - match:
+        app_type: windows
+      # fallback receiver
+      receiver: windows-team-admin
+      routes:
+      - match:
+          severity: critical
+        receiver: windows-team-manager
+      - match:
+          severity: warning
+        receiver: windows-team-lead
+
+    # PEC Technologies.
+  - match_re:
+      app_type: (python|go)
+    # fallback receiver
+    receiver: pec-admin
+    routes:
+    # Python team
+    - match:
+        app_type: python
+      # fallback receiver
+      receiver: python-team-admin
+      routes:
+      - match:
+          severity: critical
+        receiver: python-team-manager
+      - match:
+          severity: warning
+        receiver: python-team-lead
+
+    # Go team
+    - match:
+        app_type: go
+      # fallback receiver
+      receiver: go-team-admin
+      routes:
+      - match:
+          severity: critical
+        receiver: go-team-manager
+      - match:
+          severity: warning
+        receiver: go-team-lead
+
+receivers:
+- name: admin
+  email_configs:
+  - to: 'admin@example.com'
+
+- name: os-admin
+  email_configs:
+  - to: 'os-admin@example.com'
+
+- name: linux-team-admin
+  email_configs:
+  - to: 'l-admin@example.com'
+
+- name: linux-team-lead
+  email_configs:
+  - to: 'l-lead@example.com'
+
+- name: linux-team-manager
+  email_configs:
+  - to: 'l-manager@example.com'
+
+- name: windows-team-admin
+  email_configs:
+  - to: 'w-admin@example.com'
+
+- name: windows-team-lead
+  email_configs:
+  - to: 'w-lead@example.com'
+
+- name: windows-team-manager
+  email_configs:
+  - to: 'w-manager@example.com'
+
+- name: pec-admin
+  email_configs:
+  - to: 'pec-admin@example.com'
+
+- name: python-team-admin
+  email_configs:
+  - to: 'pteamadmin@example.com'
+
+- name: python-team-lead
+  email_configs:
+  - to: 'pteamlead@example.com'
+
+- name: python-team-manager
+  email_configs:
+  - to: 'pteammanager@example.com'
+
+- name: go-team-admin
+  email_configs:
+  - to: 'goteamadmin@example.com'
+
+- name: go-team-lead
+  email_configs:
+  - to: 'goteamlead@example.com'
+
+- name: go-team-manager
+  email_configs:
+  - to: 'goteammanager@example.com'
